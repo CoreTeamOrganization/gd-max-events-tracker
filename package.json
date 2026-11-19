@@ -1,0 +1,17 @@
+{
+  "name": "com.gamedistrict.maxeventtracker",
+  "version": "0.2.0",
+  "displayName": "MaxEventTracker",
+  "description": "Grouped custom analytics events (ad activity, gaming, generic, social, subscription). SDK-agnostic: the game passes an IEventBackend adapter (AppLovin MAX / Metica sample included).",
+  "unity": "2022.3",
+  "author": {
+    "name": "Game District"
+  },
+  "samples": [
+    {
+      "displayName": "SDK Backends",
+      "description": "MaxSdkEventBackend, MeticaSdkEventBackend and EventBackendFactory (creates one from a TrackingEventsType). Import into Assets so they compile alongside your SDKs, however those are installed.",
+      "path": "Samples~/SdkBackends"
+    }
+  ]
+}
