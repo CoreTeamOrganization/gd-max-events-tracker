@@ -8,7 +8,7 @@ A Unity UPM package (`com.gamedistrict.maxeventtracker`, Unity 2022.3+) that wra
 
 ## Building / testing
 
-There is no build script, test suite, or linter. Code only compiles inside a Unity project that consumes the package (via `Packages/manifest.json` with a `#vX.Y.Z` git tag, or as a local/embedded package). The `Samples~/` code additionally needs the AppLovin MAX SDK (and Metica for `MeticaSdkEventBackend`) in that host project. When changing code here, verify C# by reading carefully; you cannot run Unity in this environment.
+There is no build script, test suite, or linter. Code only compiles inside a Unity project that consumes the package (Package Manager → Add package from git URL with a `#vX.Y.Z` tag, or as a local/embedded package). The `Samples~/` code additionally needs the AppLovin MAX SDK (and Metica for `MeticaSdkEventBackend`) in that host project. When changing code here, verify C# by reading carefully; you cannot run Unity in this environment.
 
 Every new file/folder needs a matching Unity `.meta` file with a unique GUID (folders inside `Samples~/` and `Documentation~/` are exempt — Unity ignores `~` folders).
 

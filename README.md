@@ -10,15 +10,22 @@ A lightweight wrapper for tracking predefined user events through the AppLovin M
 
 ## Installation
 
-Add the package to your project's `Packages/manifest.json`, pinned to a release tag:
+Install through Unity's **Package Manager**:
 
-```json
-"com.gamedistrict.maxeventtracker": "https://github.com/CoreTeamOrganization/gd-max-events-tracker.git#v0.2.0"
-```
+1. Open **Window → Package Manager**.
+2. Click **+** (top-left) → **Add package from git URL…**
+3. Paste the URL, pinned to a release tag, and click **Add**:
 
-Then import **Package Manager → MaxEventTracker → Samples → SDK Backends** once, which copies the MAX/Metica backends and
-`EventBackendFactory` into your `Assets/`. When you upgrade the tag, delete the old
-`Assets/Samples/MaxEventTracker/<old version>/` folder before re-importing, or the classes will be defined twice.
+   ```
+   https://github.com/CoreTeamOrganization/gd-max-events-tracker.git#v0.2.0
+   ```
+
+4. Select **MaxEventTracker** in the list → **Samples** → **SDK Backends** → **Import**. This copies the MAX/Metica
+   backends and `EventBackendFactory` into your `Assets/` once.
+
+To upgrade, add the package again with the new tag. Delete the old `Assets/Samples/MaxEventTracker/<old version>/`
+folder before re-importing the sample, or the classes will be defined twice.
+
 ---
 
 ## Setup
@@ -65,9 +72,11 @@ MaxEventTracker.Initialize(EventBackendFactory.Create(TrackingEventsType.Metica)
 - **Menu:** `GameDistrict → MaxEventTracker → Metica SDK Detected` has a ✓ checkmark when Metica is detected and none when it isn't. Clicking it re-checks and opens a dialog saying how Metica was found (assembly or folder) and what that means for `EventBackendFactory`.
 - **Console:** once per Editor session, a line saying `[MaxEventTracker] Metica SDK detected (…)` or `… not detected …`, plus a line whenever the define is added or removed.
 
-### 1. Initialize on MAX initialization
+### Initialize after your ad SDK
 
-`MaxEventTracker` must be initialized **after the MAX SDK finishes initializing**. Call `Initialize(backend)` from inside the MAX SDK initialization callback — event tracking is gated behind this call and silently no-ops until it runs.
+`MaxEventTracker` must be initialized **after the ad SDK (MAX or Metica) finishes initializing**. Event tracking is gated behind `Initialize(backend)` and no-ops (with an error log) until it runs. `Initialize` also tracks the app-open event automatically.
+
+**AppLovin MAX** — call it from the MAX initialization callback:
 
 ```csharp
 void Start()
@@ -85,25 +94,19 @@ private void OnMaxInitialized(MaxSdkBase.SdkConfiguration config)
 }
 ```
 
-Using **Lumify**? It owns MAX initialization, so listen for its event instead (raised on the main thread):
+**Metica** — call it once Metica's ads initialization succeeds:
 
 ```csharp
-LumifySdk.Ads.NetworkInitCompleted += info =>
+protected override async Task OnInitializeAsync(bool testAds)
 {
-    // Lumify initializes exactly one of these per session.
-    if (info.NetworkName == "AppLovin")
-        MaxEventTracker.Initialize(EventBackendFactory.Create(TrackingEventsType.Max));
-    else if (info.NetworkName == "Metica")
-        MaxEventTracker.Initialize(EventBackendFactory.Create(TrackingEventsType.Metica));
-};
+    MeticaAds.RevenueCallbackDelivery = CallbackDelivery.NativeThread;
+    var mediationInfo = new MeticaMediationInfo(MeticaMediationInfo.MeticaMediationType.MAX, AppKey);
+    var result = await MeticaInitializer.InitializeAds(mediationInfo);
+
+    // Success — Metica is ready, initialize event tracking here.
+    MaxEventTracker.Initialize(EventBackendFactory.Create(TrackingEventsType.Metica));
+}
 ```
-
-### 2. What `Initialize(backend)` does
-
-- Stores the backend (`MaxEventTracker.Backend`) and sets `IsEnabled = true`, which unlocks tracking. A null backend is rejected with an error.
-- Automatically tracks the **app open** event.
-
-Calling it a second time is ignored (logs a warning). Tracking calls made before `Initialize()` are safely skipped with a clear error — the event-group handlers (`AdActivity`, `Gaming`, `Generic`, `Social`, `Subscription`) exist from startup.
 
 ---
 
@@ -128,6 +131,21 @@ void OnAdDisplayed(string adUnitId, MaxSdkBase.AdInfo info) =>
 void OnAdClicked(string adUnitId, MaxSdkBase.AdInfo info) =>
     MaxEventTracker.AdActivity.TrackAdClicked();
 ```
+
+Under **Metica**, ads are shown through Metica, so call the same methods from Metica's ad callbacks instead of MAX's.
+Hook up every ad format you use (interstitial, rewarded, banner, MREC):
+
+```csharp
+// Inside your Metica ad callbacks (shown for rewarded; repeat for the other formats you use)
+MeticaAdsCallbacks.Rewarded.OnAdShowSuccess += ad =>
+    MaxEventTracker.AdActivity.TrackAdImpression();
+
+MeticaAdsCallbacks.Rewarded.OnAdClicked += ad =>
+    MaxEventTracker.AdActivity.TrackAdClicked();
+```
+
+`TrackRewardedAdOpportunity(adUnitId)` needs no change: with the Metica backend its readiness check asks
+`MeticaSdk.Ads.IsRewardedReady` instead of MAX.
 
 **When to call `TrackRewardedAdOpportunity()`**
 
