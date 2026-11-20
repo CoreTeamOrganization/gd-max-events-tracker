@@ -132,17 +132,25 @@ void OnAdClicked(string adUnitId, MaxSdkBase.AdInfo info) =>
     MaxEventTracker.AdActivity.TrackAdClicked();
 ```
 
-Under **Metica**, ads are shown through Metica, so call the same methods from Metica's ad callbacks instead of MAX's.
-Hook up every ad format you use (interstitial, rewarded, banner, MREC):
+Under **Metica**, ads are shown through Metica, so call the same methods from Metica's ad callbacks
+(`MeticaAdsCallbacks`, namespace `Metica.Ads`) instead of MAX's. Hook up every ad format you use:
 
 ```csharp
-// Inside your Metica ad callbacks (shown for rewarded; repeat for the other formats you use)
-MeticaAdsCallbacks.Rewarded.OnAdShowSuccess += ad =>
-    MaxEventTracker.AdActivity.TrackAdImpression();
+using Metica.Ads;
 
-MeticaAdsCallbacks.Rewarded.OnAdClicked += ad =>
-    MaxEventTracker.AdActivity.TrackAdClicked();
+// Impressions: fullscreen formats report OnAdShowSuccess
+MeticaAdsCallbacks.Interstitial.OnAdShowSuccess += ad => MaxEventTracker.AdActivity.TrackAdImpression();
+MeticaAdsCallbacks.Rewarded.OnAdShowSuccess     += ad => MaxEventTracker.AdActivity.TrackAdImpression();
+
+// Clicks
+MeticaAdsCallbacks.Interstitial.OnAdClicked += ad => MaxEventTracker.AdActivity.TrackAdClicked();
+MeticaAdsCallbacks.Rewarded.OnAdClicked     += ad => MaxEventTracker.AdActivity.TrackAdClicked();
+MeticaAdsCallbacks.Banner.OnAdClicked       += ad => MaxEventTracker.AdActivity.TrackAdClicked();
+MeticaAdsCallbacks.Mrec.OnAdClicked         += ad => MaxEventTracker.AdActivity.TrackAdClicked();
 ```
+
+Banner and MREC have no show callback in Metica (`OnAdLoadSuccess`, `OnAdLoadFailed`, `OnAdClicked`,
+`OnAdRevenuePaid` only), so only their clicks are tracked here.
 
 `TrackRewardedAdOpportunity(adUnitId)` needs no change: with the Metica backend its readiness check asks
 `MeticaSdk.Ads.IsRewardedReady` instead of MAX.
