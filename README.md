@@ -5,7 +5,7 @@ A lightweight wrapper for tracking predefined user events through the AppLovin M
 - **Version:** 0.2
 - **Package:** `com.gamedistrict.maxeventtracker`
 - **Namespace:** `GameDistrict.EventTracking` (the package and the SDK Backends sample). Add `using GameDistrict.EventTracking;`.
-- **Dependency:** none at package level. The package never references an SDK directly — the game passes an `IEventBackend` adapter (see *Connect your SDK* below), so it works however MAX is installed (UPM package or a folder under `Assets/`).
+- **Dependency:** none at package level. The package never references an SDK directly — the game passes an `IEventBackend` adapter (ready-made MAX/Metica ones ship in the **SDK Backends** sample), so it works however MAX is installed (UPM package or a folder under `Assets/`).
 
 
 ## Installation
@@ -31,28 +31,6 @@ folder before re-importing the sample, or the classes will be defined twice.
 ## Setup
 
 > **No scene setup.** `MaxEventTracker` is a plain static class: there's no prefab or GameObject to place. Its state is reset at `RuntimeInitializeLoadType.SubsystemRegistration` (before any scene loads) on every play session, so it starts disabled and clean even in the Editor with domain reload turned off. Call the static members directly, e.g. `MaxEventTracker.Gaming.TrackLevelStart(3)`.
-
-### Connect your SDK (`IEventBackend`)
-
-MaxEventTracker sends every event through an `IEventBackend` that **your game** provides:
-
-```csharp
-public interface IEventBackend
-{
-    void TrackEvent(string eventName, IDictionary<string, string> parameters);
-    bool IsRewardedAdReady(string adUnitId);
-}
-```
-
-Ready-made adapters ship as a package sample: **Package Manager → MaxEventTracker → Samples → SDK Backends → Import**. It copies three files into `Assets/Samples/...`, where they compile alongside your SDKs:
-
-| File | Purpose |
-| --- | --- |
-| `MaxSdkEventBackend.cs` | AppLovin MAX: `MaxSdk.TrackEvent`, `MaxSdk.IsRewardedAdReady`. |
-| `MeticaSdkEventBackend.cs` | Metica: `MeticaSdk.Ads.Max.TrackEvent`, `MeticaSdk.Ads.IsRewardedReady`. Compiled only while Metica is imported. |
-| `EventBackendFactory.cs` | `Create(TrackingEventsType)` returns the backend for `TrackingEventsType.Max` or `TrackingEventsType.Metica`. |
-
-You can move them anywhere in your game's scripts, or write your own adapter for another SDK.
 
 ### AppLovin MAX or Metica
 
@@ -280,48 +258,37 @@ subscription.TrackStartTrial();
 
 ---
 
-## Full Example
-
-```csharp
-using GameDistrict.EventTracking;
-using UnityEngine;
-
-public class GameBootstrap : MonoBehaviour
-{
-    [SerializeField] private string _rewardedAdUnitId;
-
-    private void Start()
-    {
-        MaxSdkCallbacks.OnSdkInitializedEvent += OnMaxInitialized;
-        MaxSdk.SetSdkKey("YOUR_SDK_KEY");
-        MaxSdk.InitializeSdk();
-    }
-
-    private void OnMaxInitialized(MaxSdkBase.SdkConfiguration config)
-    {
-        // Initialize event tracking once MAX is ready. This also tracks the app-open event.
-        MaxEventTracker.Initialize(EventBackendFactory.Create(TrackingEventsType.Max));
-    }
-
-    // Later, anywhere in your game:
-    private void OnRewardedOfferShown() =>
-        MaxEventTracker.AdActivity.TrackRewardedAdOpportunity(_rewardedAdUnitId);
-
-    private void OnLevelStarted(int level) =>
-        MaxEventTracker.Gaming.TrackLevelStart(level);
-
-    private void OnLevelCompleted(int level) =>
-        MaxEventTracker.Gaming.TrackLevelComplete(level);
-
-    private void OnCoinsSpent(int amount) =>
-        MaxEventTracker.Gaming.TrackVirtualResourceTransaction(-amount, GamingCategory.COINS);
-}
-```
-
 ---
 
-## Notes
+## Instructions for AI assistants
 
-- **Enable gate:** All tracking is a no-op until `Initialize()` is called. This is intentional so events are never sent before MAX is ready.
-- **Logging:** Every tracked event writes a line to the Unity console for easy debugging, including its parameter values when any are supplied.
-- **Log only what fits your game:** You don't need to call every event — track only the ones that match your game's actual features and moments. Not all events apply to every game, and logging irrelevant ones adds noise without value.
+If you are an AI coding assistant integrating MaxEventTracker into a Unity game, follow these steps in order and
+**make one git commit per step**, so each step can be reviewed and reverted on its own:
+
+1. **Add the package from GitHub.** Add this line to `dependencies` in `Packages/manifest.json` (use the latest
+   release tag):
+   `"com.gamedistrict.maxeventtracker": "https://github.com/CoreTeamOrganization/gd-max-events-tracker.git#v0.2.0"`
+   Commit: `Add MaxEventTracker package`.
+2. **Import the SDK Backends sample.** Copy `Samples~/SdkBackends/*.cs` from the package (in a resolved project it is
+   under `Library/PackageCache/com.gamedistrict.maxeventtracker@*/`) into
+   `Assets/Samples/MaxEventTracker/<version>/SDK Backends/`. Copy only the `.cs` files; Unity generates the `.meta`
+   files. Don't edit them, and don't import them twice. Commit: `Import MaxEventTracker SDK Backends sample`.
+3. **Call `Initialize` after the ad SDK initializes.** Find where the game initializes AppLovin MAX and/or Metica and
+   call `MaxEventTracker.Initialize(EventBackendFactory.Create(TrackingEventsType.Max))` (or `.Metica`) in that SDK's
+   success callback, as shown in *Initialize after your ad SDK*. Call it exactly once per session, from whichever SDK
+   the game actually initialized. Don't add an app-open call: `Initialize` sends it. Commit:
+   `Initialize MaxEventTracker after ad SDK init`.
+4. **Call the gameplay and ad events.** Hook up the events from the *Event Reference* at the matching moments in
+   existing game code: ad impressions/clicks in the MAX or Metica ad callbacks, `TrackRewardedAdOpportunity` where a
+   rewarded offer becomes visible, and level, resource, tutorial, shop, social and subscription events where the
+   game already handles those moments. Only add events for features the game actually has; don't build new features
+   or UI just to fire an event. Commit: `Track MaxEventTracker gameplay and ad events`.
+
+Rules:
+- Add `using GameDistrict.EventTracking;` where needed. Call the static API directly
+  (`MaxEventTracker.Gaming.TrackLevelStart(level)`); there is no prefab or scene object to add.
+- Never call an event every frame; fire it once per occurrence.
+- For `TrackVirtualResourceTransaction`, earning is positive and spending is negative; pass a `GamingCategory`
+  constant as the resource type.
+- After the changes, list for the developer which events were wired up, and where, and which ones were skipped
+  because the game has no matching feature.
