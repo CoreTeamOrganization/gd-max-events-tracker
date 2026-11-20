@@ -1,6 +1,6 @@
 {
   "name": "com.gamedistrict.maxeventtracker",
-  "version": "0.2.0",
+  "version": "0.3.0",
   "displayName": "MaxEventTracker",
   "description": "Grouped custom analytics events (ad activity, gaming, generic, social, subscription). SDK-agnostic: the game passes an IEventBackend adapter (AppLovin MAX / Metica sample included).",
   "unity": "2022.3",

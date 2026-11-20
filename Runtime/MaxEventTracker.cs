@@ -16,7 +16,7 @@ namespace GameDistrict.EventTracking
     public static class MaxEventTracker
     {
         /// <summary>Package version.</summary>
-        public const string Version = "0.2";
+        public const string Version = "0.3";
 
         /// <summary>True once <see cref="Initialize(IEventBackend)"/> has run this session.</summary>
         public static bool IsEnabled { get; private set; }

@@ -2,7 +2,7 @@
 
 A lightweight wrapper for tracking predefined user events through the AppLovin MAX SDK (or Metica). Events are grouped by category and exposed through a singleton.
 
-- **Version:** 0.2
+- **Version:** 0.3
 - **Package:** `com.gamedistrict.maxeventtracker`
 - **Namespace:** `GameDistrict.EventTracking` (the package and the SDK Backends sample). Add `using GameDistrict.EventTracking;`.
 - **Dependency:** none at package level. The package never references an SDK directly — the game passes an `IEventBackend` adapter (ready-made MAX/Metica ones ship in the **SDK Backends** sample), so it works however MAX is installed (UPM package or a folder under `Assets/`).
@@ -17,7 +17,7 @@ Install through Unity's **Package Manager**:
 3. Paste the URL, pinned to a release tag, and click **Add**:
 
    ```
-   https://github.com/CoreTeamOrganization/gd-max-events-tracker.git#v0.2.0
+   https://github.com/CoreTeamOrganization/gd-max-events-tracker.git#v0.3.0
    ```
 
 4. Select **MaxEventTracker** in the list → **Samples** → **SDK Backends** → **Import**. This copies the MAX/Metica
@@ -267,7 +267,7 @@ If you are an AI coding assistant integrating MaxEventTracker into a Unity game,
 
 1. **Add the package from GitHub.** Add this line to `dependencies` in `Packages/manifest.json` (use the latest
    release tag):
-   `"com.gamedistrict.maxeventtracker": "https://github.com/CoreTeamOrganization/gd-max-events-tracker.git#v0.2.0"`
+   `"com.gamedistrict.maxeventtracker": "https://github.com/CoreTeamOrganization/gd-max-events-tracker.git#v0.3.0"`
    Commit: `Add MaxEventTracker package`.
 2. **Import the SDK Backends sample.** Copy `Samples~/SdkBackends/*.cs` from the package (in a resolved project it is
    under `Library/PackageCache/com.gamedistrict.maxeventtracker@*/`) into

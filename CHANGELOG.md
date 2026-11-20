@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.3.0]
+- README: install through Package Manager (**Add package from git URL**) instead of editing `Packages/manifest.json`.
+- README: Metica initialization example and Metica ad callbacks (`MeticaAdsCallbacks`) for ad-activity events.
+- README: new *Instructions for AI assistants* section (step-by-step integration, one commit per step).
+- README: removed the Lumify, `Initialize(backend)` details, `IEventBackend`, Full Example and Notes sections.
+- Added `CLAUDE.md`.
+
 ## [Unreleased]
 - `METICA_SDK_PRESENT` changes are written to ProjectSettings.asset immediately, so commits and CI builds see them
   without a manual project save. New `MeticaDefineBuildCheck` (preprocess build): if the define doesn't match whether
